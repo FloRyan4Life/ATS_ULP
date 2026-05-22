@@ -4,21 +4,21 @@ This repository contains a small homing model with a Python package layout and a
 
 ## Structure
 
-- `homing_core/`: core Python package with models, geometry, pairing logic, visualization, and the demo entrypoint
-- `homing_v4.py`: compatibility wrapper that preserves the previous script entrypoint
+- `homing_code/`: core Python package with models, geometry, pairing logic, visualization, and the demo entrypoint
+- `main.py`: top-level entrypoint for the demo
 - `docs/latex/`: LaTeX documentation project
 - `docs/screenshots/`: image assets for the documentation
 
 ## Run the demo
 
 ```bash
-python homing_v4.py
+python main.py
 ```
 
 You can also run the package directly:
 
 ```bash
-python -m homing_core
+python -m homing_code
 ```
 
 ## Build the documentation

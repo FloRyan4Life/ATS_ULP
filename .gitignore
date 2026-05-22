@@ -14,3 +14,5 @@ dist/
 *.synctex.gz
 *.toc
 docs/latex/build/
+docs/latex/_minted/
+docs/latex/main.pdf
