@@ -1,12 +1,22 @@
 """Executable demo entrypoint for the homing package."""
 
+import os
+import sys
+
 import numpy as np
 import matplotlib.pyplot as plt
 
-from .geometry import build_retina
-from .models import World
-from .pairing import homing_vector
-from .visualization import HomingDiashow
+if __package__ in (None, ""):
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+    from homing_code.geometry import build_retina
+    from homing_code.models import World
+    from homing_code.pairing import homing_vector
+    from homing_code.visualization import HomingDiashow
+else:
+    from .geometry import build_retina
+    from .models import World
+    from .pairing import homing_vector
+    from .visualization import HomingDiashow
 
 
 def _precompute_path(world: World, snapshot, step_size: float, tolerance: float, max_steps: int = 50):

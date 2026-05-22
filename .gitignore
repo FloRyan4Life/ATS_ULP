@@ -16,3 +16,5 @@ dist/
 docs/latex/build/
 docs/latex/_minted/
 docs/latex/main.pdf
+docs/latex/*.config.minted
+docs/latex/*.synctex*
