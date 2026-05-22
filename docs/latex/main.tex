@@ -1,0 +1,51 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[ngerman]{babel}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{minted}
+
+\graphicspath{{../screenshots/}}
+
+\title{ATS ULP V1 -- Homing Model Dokumentation}
+\author{Florian}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Projektstruktur}
+Das Projekt ist als kleines Python-Paket organisiert. Die Kernlogik liegt in den Modulen unter \texttt{homing\_core/}. Der alte Einstiegspunkt \texttt{homing\_v4.py} bleibt als Wrapper erhalten.
+
+\section{Code-Referenzen}
+\subsection{Datenmodelle}
+\inputminted[fontsize=\small,linenos,breaklines]{python}{../../homing_core/models.py}
+
+\subsection{Geometrie}
+\inputminted[fontsize=\small,linenos,breaklines]{python}{../../homing_core/geometry.py}
+
+\subsection{Pairing und Vektoren}
+\inputminted[fontsize=\small,linenos,breaklines]{python}{../../homing_core/pairing.py}
+
+\subsection{Visualisierung}
+\inputminted[fontsize=\small,linenos,breaklines]{python}{../../homing_core/visualization.py}
+
+\subsection{Demo-Start}
+\inputminted[fontsize=\small,linenos,breaklines]{python}{../../homing_core/main.py}
+
+\section{Screenshots}
+Alle Screenshots für die Dokumentation werden in \texttt{docs/screenshots/} abgelegt und von dort eingebunden.
+
+\begin{figure}[h]
+  \centering
+  \fbox{\parbox{0.8\linewidth}{Screenshot-Platzhalter. Datei in \texttt{docs/screenshots/} ablegen und hier mit \texttt{\textbackslash includegraphics} referenzieren.}}
+  \caption{Platzhalter für Visualisierungen aus dem Homing-Projekt.}
+\end{figure}
+
+\end{document}

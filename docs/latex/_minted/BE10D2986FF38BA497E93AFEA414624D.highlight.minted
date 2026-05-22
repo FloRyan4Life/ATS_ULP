@@ -1,0 +1,135 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Matplotlib visualization for the homing model.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{math}
+
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{numpy}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{np}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{matplotlib.pyplot}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{plt}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{matplotlib.patches}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{Arc}\PYG{p}{,} \PYG{n}{Wedge}
+
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{.pairing}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{compute\PYGZus{}vectors}\PYG{p}{,} \PYG{n}{homing\PYGZus{}vector}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{.geometry}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{build\PYGZus{}retina}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{.models}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{Retina}\PYG{p}{,} \PYG{n}{World}
+
+
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{HomingDiashow}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Interactive step\PYGZhy{}by\PYGZhy{}step visualization of the homing process.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{world}\PYG{p}{:} \PYG{n}{World}\PYG{p}{,} \PYG{n}{snapshot}\PYG{p}{:} \PYG{n}{Retina}\PYG{p}{,} \PYG{n}{start}\PYG{p}{,} \PYG{n}{step\PYGZus{}size}\PYG{o}{=}\PYG{l+m+mf}{0.4}\PYG{p}{,} \PYG{n}{tolerance}\PYG{o}{=}\PYG{l+m+mf}{0.15}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{world} \PYG{o}{=} \PYG{n}{world}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{snapshot} \PYG{o}{=} \PYG{n}{snapshot}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{path} \PYG{o}{=} \PYG{p}{[}\PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{start}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{float}\PYG{p}{)]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{step\PYGZus{}size} \PYG{o}{=} \PYG{n}{step\PYGZus{}size}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{tolerance} \PYG{o}{=} \PYG{n}{tolerance}
+
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{r\PYGZus{}snap} \PYG{o}{=} \PYG{l+m+mf}{0.50}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{r\PYGZus{}cur} \PYG{o}{=} \PYG{l+m+mf}{1.00}
+
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{state} \PYG{o}{=} \PYG{l+m+mi}{0}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{labels} \PYG{o}{=} \PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}Retinas\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}Pairing\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}Komponenten\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}Vektor\PYGZdq{}}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}Bewegung\PYGZdq{}}\PYG{p}{]}
+
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{fig}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax} \PYG{o}{=} \PYG{n}{plt}\PYG{o}{.}\PYG{n}{subplots}\PYG{p}{(}\PYG{n}{figsize}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{))}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{fig}\PYG{o}{.}\PYG{n}{canvas}\PYG{o}{.}\PYG{n}{mpl\PYGZus{}connect}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}key\PYGZus{}press\PYGZus{}event\PYGZdq{}}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{on\PYGZus{}key}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}draw}\PYG{p}{()}
+        \PYG{n}{plt}\PYG{o}{.}\PYG{n}{show}\PYG{p}{()}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{\PYGZus{}draw\PYGZus{}ring}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{center}\PYG{p}{,} \PYG{n}{retina}\PYG{p}{:} \PYG{n}{Retina}\PYG{p}{,} \PYG{n}{radius}\PYG{p}{:} \PYG{n+nb}{float}\PYG{p}{,} \PYG{n}{hollow}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{):}
+        \PYG{k}{for} \PYG{n}{feature} \PYG{o+ow}{in} \PYG{n}{retina}\PYG{o}{.}\PYG{n}{features}\PYG{p}{:}
+            \PYG{n}{angle\PYGZus{}deg} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{degrees}\PYG{p}{(}\PYG{n}{feature}\PYG{o}{.}\PYG{n}{center\PYGZus{}angle}\PYG{p}{)}
+            \PYG{n}{half\PYGZus{}width} \PYG{o}{=} \PYG{n+nb}{max}\PYG{p}{(}\PYG{n}{np}\PYG{o}{.}\PYG{n}{degrees}\PYG{p}{(}\PYG{n}{feature}\PYG{o}{.}\PYG{n}{arc\PYGZus{}length} \PYG{o}{/} \PYG{l+m+mf}{2.0}\PYG{p}{),} \PYG{l+m+mf}{1.0}\PYG{p}{)}
+            \PYG{n}{color} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}red\PYGZdq{}} \PYG{k}{if} \PYG{n}{feature}\PYG{o}{.}\PYG{n}{is\PYGZus{}landmark} \PYG{k}{else} \PYG{l+s+s2}{\PYGZdq{}green\PYGZdq{}}
+
+            \PYG{k}{if} \PYG{n}{hollow}\PYG{p}{:}
+                \PYG{n}{arc} \PYG{o}{=} \PYG{n}{Arc}\PYG{p}{(}\PYG{n}{center}\PYG{p}{,} \PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{radius}\PYG{p}{,} \PYG{l+m+mi}{2} \PYG{o}{*} \PYG{n}{radius}\PYG{p}{,} \PYG{n}{angle}\PYG{o}{=}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n}{theta1}\PYG{o}{=}\PYG{n}{angle\PYGZus{}deg} \PYG{o}{\PYGZhy{}} \PYG{n}{half\PYGZus{}width}\PYG{p}{,} \PYG{n}{theta2}\PYG{o}{=}\PYG{n}{angle\PYGZus{}deg} \PYG{o}{+} \PYG{n}{half\PYGZus{}width}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{n}{color}\PYG{p}{,} \PYG{n}{linewidth}\PYG{o}{=}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{n}{zorder}\PYG{o}{=}\PYG{l+m+mi}{10}\PYG{p}{)}
+                \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{add\PYGZus{}patch}\PYG{p}{(}\PYG{n}{arc}\PYG{p}{)}
+            \PYG{k}{else}\PYG{p}{:}
+                \PYG{n}{wedge} \PYG{o}{=} \PYG{n}{Wedge}\PYG{p}{(}\PYG{n}{center}\PYG{p}{,} \PYG{n}{radius}\PYG{p}{,} \PYG{n}{angle\PYGZus{}deg} \PYG{o}{\PYGZhy{}} \PYG{n}{half\PYGZus{}width}\PYG{p}{,} \PYG{n}{angle\PYGZus{}deg} \PYG{o}{+} \PYG{n}{half\PYGZus{}width}\PYG{p}{,} \PYG{n}{facecolor}\PYG{o}{=}\PYG{n}{color}\PYG{p}{,} \PYG{n}{edgecolor}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}black\PYGZdq{}}\PYG{p}{,} \PYG{n}{linewidth}\PYG{o}{=}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n}{alpha}\PYG{o}{=}\PYG{l+m+mf}{0.8}\PYG{p}{,} \PYG{n}{zorder}\PYG{o}{=}\PYG{l+m+mi}{10}\PYG{p}{)}
+                \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{add\PYGZus{}patch}\PYG{p}{(}\PYG{n}{wedge}\PYG{p}{)}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{\PYGZus{}draw}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{clear}\PYG{p}{()}
+        \PYG{n}{position} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{path}\PYG{p}{[}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]}
+        \PYG{n}{current} \PYG{o}{=} \PYG{n}{build\PYGZus{}retina}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{world}\PYG{p}{,} \PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{position}\PYG{p}{))}
+
+        \PYG{k}{for} \PYG{n}{landmark} \PYG{o+ow}{in} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{world}\PYG{o}{.}\PYG{n}{landmarks}\PYG{p}{:}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{add\PYGZus{}patch}\PYG{p}{(}\PYG{n}{plt}\PYG{o}{.}\PYG{n}{Circle}\PYG{p}{(}\PYG{n}{landmark}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}pos\PYGZdq{}}\PYG{p}{],} \PYG{n}{landmark}\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}radius\PYGZdq{}}\PYG{p}{],} \PYG{n}{color}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}skyblue\PYGZdq{}}\PYG{p}{,} \PYG{n}{ec}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}navy\PYGZdq{}}\PYG{p}{,} \PYG{n}{zorder}\PYG{o}{=}\PYG{l+m+mi}{5}\PYG{p}{))}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}kX\PYGZdq{}}\PYG{p}{,} \PYG{n}{markersize}\PYG{o}{=}\PYG{l+m+mi}{12}\PYG{p}{,} \PYG{n}{zorder}\PYG{o}{=}\PYG{l+m+mi}{6}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}Home\PYGZdq{}}\PYG{p}{)}
+        \PYG{k}{if} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{path}\PYG{p}{)} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{1}\PYG{p}{:}
+            \PYG{n}{path} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{path}\PYG{p}{)}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{n}{path}\PYG{p}{[:,} \PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{path}\PYG{p}{[:,} \PYG{l+m+mi}{1}\PYG{p}{],} \PYG{l+s+s2}{\PYGZdq{}r.\PYGZhy{}\PYGZdq{}}\PYG{p}{,} \PYG{n}{linewidth}\PYG{o}{=}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{zorder}\PYG{o}{=}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}Pfad\PYGZdq{}}\PYG{p}{)}
+        \PYG{k}{else}\PYG{p}{:}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{plot}\PYG{p}{(}\PYG{n}{position}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{position}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{l+s+s2}{\PYGZdq{}mo\PYGZdq{}}\PYG{p}{,} \PYG{n}{markersize}\PYG{o}{=}\PYG{l+m+mi}{8}\PYG{p}{,} \PYG{n}{zorder}\PYG{o}{=}\PYG{l+m+mi}{6}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}Start\PYGZdq{}}\PYG{p}{)}
+
+        \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{state} \PYG{o+ow}{in} \PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{):}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}draw\PYGZus{}ring}\PYG{p}{(}\PYG{n}{position}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{snapshot}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{r\PYGZus{}snap}\PYG{p}{,} \PYG{n}{hollow}\PYG{o}{=}\PYG{k+kc}{False}\PYG{p}{)}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}draw\PYGZus{}ring}\PYG{p}{(}\PYG{n}{position}\PYG{p}{,} \PYG{n}{current}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{r\PYGZus{}cur}\PYG{p}{,} \PYG{n}{hollow}\PYG{o}{=}\PYG{k+kc}{True}\PYG{p}{)}
+
+        \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{state} \PYG{o}{==} \PYG{l+m+mi}{1}\PYG{p}{:}
+            \PYG{n}{\PYGZus{}}\PYG{p}{,} \PYG{n}{\PYGZus{}}\PYG{p}{,} \PYG{n}{pairs} \PYG{o}{=} \PYG{n}{compute\PYGZus{}vectors}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{snapshot}\PYG{p}{,} \PYG{n}{current}\PYG{p}{)}
+            \PYG{k}{for} \PYG{n}{pair} \PYG{o+ow}{in} \PYG{n}{pairs}\PYG{p}{:}
+                \PYG{n}{snapshot\PYGZus{}feature} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{snapshot}\PYG{o}{.}\PYG{n}{features}\PYG{p}{[}\PYG{n}{pair}\PYG{o}{.}\PYG{n}{snapshot\PYGZus{}idx}\PYG{p}{]}
+                \PYG{n}{retina\PYGZus{}feature} \PYG{o}{=} \PYG{n}{current}\PYG{o}{.}\PYG{n}{features}\PYG{p}{[}\PYG{n}{pair}\PYG{o}{.}\PYG{n}{retina\PYGZus{}idx}\PYG{p}{]}
+                \PYG{n}{color} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}red\PYGZdq{}} \PYG{k}{if} \PYG{n}{snapshot\PYGZus{}feature}\PYG{o}{.}\PYG{n}{is\PYGZus{}landmark} \PYG{k}{else} \PYG{l+s+s2}{\PYGZdq{}green\PYGZdq{}}
+                \PYG{n}{x1} \PYG{o}{=} \PYG{n}{position}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{+} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{r\PYGZus{}snap} \PYG{o}{*} \PYG{n}{math}\PYG{o}{.}\PYG{n}{cos}\PYG{p}{(}\PYG{n}{snapshot\PYGZus{}feature}\PYG{o}{.}\PYG{n}{center\PYGZus{}angle}\PYG{p}{)}
+                \PYG{n}{y1} \PYG{o}{=} \PYG{n}{position}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{+} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{r\PYGZus{}snap} \PYG{o}{*} \PYG{n}{math}\PYG{o}{.}\PYG{n}{sin}\PYG{p}{(}\PYG{n}{snapshot\PYGZus{}feature}\PYG{o}{.}\PYG{n}{center\PYGZus{}angle}\PYG{p}{)}
+                \PYG{n}{x2} \PYG{o}{=} \PYG{n}{position}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{+} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{r\PYGZus{}cur} \PYG{o}{*} \PYG{n}{math}\PYG{o}{.}\PYG{n}{cos}\PYG{p}{(}\PYG{n}{retina\PYGZus{}feature}\PYG{o}{.}\PYG{n}{center\PYGZus{}angle}\PYG{p}{)}
+                \PYG{n}{y2} \PYG{o}{=} \PYG{n}{position}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{+} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{r\PYGZus{}cur} \PYG{o}{*} \PYG{n}{math}\PYG{o}{.}\PYG{n}{sin}\PYG{p}{(}\PYG{n}{retina\PYGZus{}feature}\PYG{o}{.}\PYG{n}{center\PYGZus{}angle}\PYG{p}{)}
+                \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{plot}\PYG{p}{([}\PYG{n}{x1}\PYG{p}{,} \PYG{n}{x2}\PYG{p}{],} \PYG{p}{[}\PYG{n}{y1}\PYG{p}{,} \PYG{n}{y2}\PYG{p}{],} \PYG{n}{color}\PYG{o}{=}\PYG{n}{color}\PYG{p}{,} \PYG{n}{linewidth}\PYG{o}{=}\PYG{l+m+mf}{2.5}\PYG{p}{,} \PYG{n}{alpha}\PYG{o}{=}\PYG{l+m+mf}{0.8}\PYG{p}{,} \PYG{n}{zorder}\PYG{o}{=}\PYG{l+m+mi}{11}\PYG{p}{)}
+                \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{plot}\PYG{p}{([}\PYG{n}{x1}\PYG{p}{,} \PYG{n}{x2}\PYG{p}{],} \PYG{p}{[}\PYG{n}{y1}\PYG{p}{,} \PYG{n}{y2}\PYG{p}{],} \PYG{l+s+s2}{\PYGZdq{}o\PYGZdq{}}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{n}{color}\PYG{p}{,} \PYG{n}{markersize}\PYG{o}{=}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{n}{zorder}\PYG{o}{=}\PYG{l+m+mi}{12}\PYG{p}{)}
+
+        \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{state} \PYG{o}{==} \PYG{l+m+mi}{2}\PYG{p}{:}
+            \PYG{n}{turn\PYGZus{}total}\PYG{p}{,} \PYG{n}{approach\PYGZus{}total}\PYG{p}{,} \PYG{n}{pairs} \PYG{o}{=} \PYG{n}{compute\PYGZus{}vectors}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{snapshot}\PYG{p}{,} \PYG{n}{current}\PYG{p}{)}
+
+            \PYG{k}{for} \PYG{n}{pair} \PYG{o+ow}{in} \PYG{n}{pairs}\PYG{p}{:}
+                \PYG{n}{retina\PYGZus{}feature} \PYG{o}{=} \PYG{n}{current}\PYG{o}{.}\PYG{n}{features}\PYG{p}{[}\PYG{n}{pair}\PYG{o}{.}\PYG{n}{retina\PYGZus{}idx}\PYG{p}{]}
+                \PYG{n}{theta} \PYG{o}{=} \PYG{n}{retina\PYGZus{}feature}\PYG{o}{.}\PYG{n}{center\PYGZus{}angle}
+                \PYG{n}{start\PYGZus{}x} \PYG{o}{=} \PYG{n}{position}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{+} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{r\PYGZus{}cur} \PYG{o}{*} \PYG{n}{math}\PYG{o}{.}\PYG{n}{cos}\PYG{p}{(}\PYG{n}{theta}\PYG{p}{)}
+                \PYG{n}{start\PYGZus{}y} \PYG{o}{=} \PYG{n}{position}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]} \PYG{o}{+} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{r\PYGZus{}cur} \PYG{o}{*} \PYG{n}{math}\PYG{o}{.}\PYG{n}{sin}\PYG{p}{(}\PYG{n}{theta}\PYG{p}{)}
+
+                \PYG{n}{tangential} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{([}\PYG{o}{\PYGZhy{}}\PYG{n}{math}\PYG{o}{.}\PYG{n}{sin}\PYG{p}{(}\PYG{n}{theta}\PYG{p}{),} \PYG{n}{math}\PYG{o}{.}\PYG{n}{cos}\PYG{p}{(}\PYG{n}{theta}\PYG{p}{)])}
+                \PYG{n}{radial} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{([}\PYG{n}{math}\PYG{o}{.}\PYG{n}{cos}\PYG{p}{(}\PYG{n}{theta}\PYG{p}{),} \PYG{n}{math}\PYG{o}{.}\PYG{n}{sin}\PYG{p}{(}\PYG{n}{theta}\PYG{p}{)])}
+
+                \PYG{n}{turn\PYGZus{}vector} \PYG{o}{=} \PYG{n}{pair}\PYG{o}{.}\PYG{n}{angle\PYGZus{}diff} \PYG{o}{*} \PYG{n}{tangential}
+                \PYG{n}{approach\PYGZus{}vector} \PYG{o}{=} \PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{pair}\PYG{o}{.}\PYG{n}{arc\PYGZus{}len\PYGZus{}diff}\PYG{p}{)} \PYG{o}{*} \PYG{n}{radial}
+
+                \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{quiver}\PYG{p}{(}\PYG{n}{start\PYGZus{}x}\PYG{p}{,} \PYG{n}{start\PYGZus{}y}\PYG{p}{,} \PYG{n}{turn\PYGZus{}vector}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{turn\PYGZus{}vector}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{n}{scale}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}purple\PYGZdq{}}\PYG{p}{,} \PYG{n}{width}\PYG{o}{=}\PYG{l+m+mf}{0.006}\PYG{p}{,} \PYG{n}{headwidth}\PYG{o}{=}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{n}{headlength}\PYG{o}{=}\PYG{l+m+mi}{5}\PYG{p}{,} \PYG{n}{zorder}\PYG{o}{=}\PYG{l+m+mi}{15}\PYG{p}{,} \PYG{n}{alpha}\PYG{o}{=}\PYG{l+m+mf}{0.9}\PYG{p}{)}
+                \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{quiver}\PYG{p}{(}\PYG{n}{start\PYGZus{}x}\PYG{p}{,} \PYG{n}{start\PYGZus{}y}\PYG{p}{,} \PYG{n}{approach\PYGZus{}vector}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{approach\PYGZus{}vector}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{n}{scale}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}orange\PYGZdq{}}\PYG{p}{,} \PYG{n}{width}\PYG{o}{=}\PYG{l+m+mf}{0.006}\PYG{p}{,} \PYG{n}{headwidth}\PYG{o}{=}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{n}{headlength}\PYG{o}{=}\PYG{l+m+mi}{5}\PYG{p}{,} \PYG{n}{zorder}\PYG{o}{=}\PYG{l+m+mi}{15}\PYG{p}{,} \PYG{n}{alpha}\PYG{o}{=}\PYG{l+m+mf}{0.9}\PYG{p}{)}
+
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{quiver}\PYG{p}{(}\PYG{n}{position}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{position}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{n}{turn\PYGZus{}total}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{turn\PYGZus{}total}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{n}{scale}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}deepskyblue\PYGZdq{}}\PYG{p}{,} \PYG{n}{width}\PYG{o}{=}\PYG{l+m+mf}{0.01}\PYG{p}{,} \PYG{n}{headwidth}\PYG{o}{=}\PYG{l+m+mi}{5}\PYG{p}{,} \PYG{n}{headlength}\PYG{o}{=}\PYG{l+m+mi}{6}\PYG{p}{,} \PYG{n}{zorder}\PYG{o}{=}\PYG{l+m+mi}{16}\PYG{p}{,} \PYG{n}{alpha}\PYG{o}{=}\PYG{l+m+mf}{0.55}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}Vt (Turn, Summe)\PYGZdq{}}\PYG{p}{)}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{quiver}\PYG{p}{(}\PYG{n}{position}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{position}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{n}{approach\PYGZus{}total}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{approach\PYGZus{}total}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{n}{scale}\PYG{o}{=}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}saddlebrown\PYGZdq{}}\PYG{p}{,} \PYG{n}{width}\PYG{o}{=}\PYG{l+m+mf}{0.01}\PYG{p}{,} \PYG{n}{headwidth}\PYG{o}{=}\PYG{l+m+mi}{5}\PYG{p}{,} \PYG{n}{headlength}\PYG{o}{=}\PYG{l+m+mi}{6}\PYG{p}{,} \PYG{n}{zorder}\PYG{o}{=}\PYG{l+m+mi}{16}\PYG{p}{,} \PYG{n}{alpha}\PYG{o}{=}\PYG{l+m+mf}{0.55}\PYG{p}{,} \PYG{n}{label}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}Vp (Approach, Summe)\PYGZdq{}}\PYG{p}{)}
+
+        \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{state} \PYG{o}{==} \PYG{l+m+mi}{3}\PYG{p}{:}
+            \PYG{n}{vector} \PYG{o}{=} \PYG{n}{homing\PYGZus{}vector}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{snapshot}\PYG{p}{,} \PYG{n}{current}\PYG{p}{)}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{quiver}\PYG{p}{(}\PYG{n}{position}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{position}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{n}{vector}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{vector}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{],} \PYG{n}{scale}\PYG{o}{=}\PYG{l+m+mi}{5}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}black\PYGZdq{}}\PYG{p}{,} \PYG{n}{width}\PYG{o}{=}\PYG{l+m+mf}{0.008}\PYG{p}{,} \PYG{n}{zorder}\PYG{o}{=}\PYG{l+m+mi}{15}\PYG{p}{)}
+
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{set\PYGZus{}xlim}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{7.5}\PYG{p}{,} \PYG{l+m+mf}{7.5}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{set\PYGZus{}ylim}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{7.5}\PYG{p}{,} \PYG{l+m+mf}{7.5}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{set\PYGZus{}aspect}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}equal\PYGZdq{}}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{grid}\PYG{p}{(}\PYG{k+kc}{True}\PYG{p}{,} \PYG{n}{linestyle}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}\PYGZhy{}\PYGZhy{}\PYGZdq{}}\PYG{p}{,} \PYG{n}{alpha}\PYG{o}{=}\PYG{l+m+mf}{0.3}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{set\PYGZus{}title}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Schritt }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{path}\PYG{p}{)}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ | }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{labels}\PYG{p}{[}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{state}\PYG{p}{]}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ | Pos: (}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{position}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{, }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{position}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{) — LEERTASTE\PYGZdq{}}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{legend}\PYG{p}{(}\PYG{n}{loc}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}upper left\PYGZdq{}}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{fig}\PYG{o}{.}\PYG{n}{canvas}\PYG{o}{.}\PYG{n}{draw\PYGZus{}idle}\PYG{p}{()}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{on\PYGZus{}key}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{event}\PYG{p}{):}
+        \PYG{k}{if} \PYG{n}{event}\PYG{o}{.}\PYG{n}{key} \PYG{o}{!=} \PYG{l+s+s2}{\PYGZdq{} \PYGZdq{}}\PYG{p}{:}
+            \PYG{k}{return}
+
+        \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{state} \PYG{o}{==} \PYG{l+m+mi}{4}\PYG{p}{:}
+            \PYG{n}{position} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{path}\PYG{p}{[}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]}
+            \PYG{n}{home} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{world}\PYG{o}{.}\PYG{n}{home}\PYG{p}{)}
+            \PYG{n}{distance} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{linalg}\PYG{o}{.}\PYG{n}{norm}\PYG{p}{(}\PYG{n}{position} \PYG{o}{\PYGZhy{}} \PYG{n}{home}\PYG{p}{)}
+            \PYG{k}{if} \PYG{n}{distance} \PYG{o}{\PYGZlt{}} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{tolerance}\PYG{p}{:}
+                \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{ax}\PYG{o}{.}\PYG{n}{set\PYGZus{}title}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}ZIEL ERREICHT\PYGZdq{}}\PYG{p}{,} \PYG{n}{fontsize}\PYG{o}{=}\PYG{l+m+mi}{16}\PYG{p}{,} \PYG{n}{color}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}green\PYGZdq{}}\PYG{p}{)}
+                \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{fig}\PYG{o}{.}\PYG{n}{canvas}\PYG{o}{.}\PYG{n}{draw\PYGZus{}idle}\PYG{p}{()}
+                \PYG{k}{return}
+
+            \PYG{n}{current} \PYG{o}{=} \PYG{n}{build\PYGZus{}retina}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{world}\PYG{p}{,} \PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{position}\PYG{p}{))}
+            \PYG{n}{vector} \PYG{o}{=} \PYG{n}{homing\PYGZus{}vector}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{snapshot}\PYG{p}{,} \PYG{n}{current}\PYG{p}{)}
+            \PYG{n}{step} \PYG{o}{=} \PYG{n+nb}{min}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{step\PYGZus{}size}\PYG{p}{,} \PYG{n}{distance} \PYG{o}{*} \PYG{l+m+mf}{0.8}\PYG{p}{)}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{path}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{position} \PYG{o}{+} \PYG{n}{vector} \PYG{o}{*} \PYG{n}{step}\PYG{p}{)}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{state} \PYG{o}{=} \PYG{l+m+mi}{0}
+        \PYG{k}{else}\PYG{p}{:}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{state} \PYG{o}{+=} \PYG{l+m+mi}{1}
+
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}draw}\PYG{p}{()}
+\end{MintedVerbatim}

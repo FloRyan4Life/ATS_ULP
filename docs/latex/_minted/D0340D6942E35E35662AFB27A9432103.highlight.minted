@@ -1,0 +1,46 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Data models used by the homing implementation.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{dataclasses}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{dataclass}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{typing}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{List}\PYG{p}{,} \PYG{n}{NamedTuple}\PYG{p}{,} \PYG{n}{Optional}\PYG{p}{,} \PYG{n}{Tuple}
+
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{numpy}\PYG{+w}{ }\PYG{k}{as}\PYG{+w}{ }\PYG{n+nn}{np}
+
+
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{FeaturePair}\PYG{p}{(}\PYG{n}{NamedTuple}\PYG{p}{):}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Matched snapshot/current feature pair and its differences.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+    \PYG{n}{snapshot\PYGZus{}idx}\PYG{p}{:} \PYG{n+nb}{int}
+    \PYG{n}{retina\PYGZus{}idx}\PYG{p}{:} \PYG{n+nb}{int}
+    \PYG{n}{angle\PYGZus{}diff}\PYG{p}{:} \PYG{n+nb}{float}
+    \PYG{n}{arc\PYGZus{}len\PYGZus{}diff}\PYG{p}{:} \PYG{n+nb}{float}
+
+
+\PYG{n+nd}{@dataclass}
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{RetinaFeature}\PYG{p}{:}
+    \PYG{n}{center\PYGZus{}angle}\PYG{p}{:} \PYG{n+nb}{float}
+    \PYG{n}{arc\PYGZus{}length}\PYG{p}{:} \PYG{n+nb}{float}
+    \PYG{n}{is\PYGZus{}landmark}\PYG{p}{:} \PYG{n+nb}{bool}
+
+
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{Retina}\PYG{p}{:}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{position}\PYG{p}{:} \PYG{n}{Tuple}\PYG{p}{[}\PYG{n+nb}{float}\PYG{p}{,} \PYG{n+nb}{float}\PYG{p}{],} \PYG{n}{features}\PYG{p}{:} \PYG{n}{List}\PYG{p}{[}\PYG{n}{RetinaFeature}\PYG{p}{]} \PYG{o}{=} \PYG{k+kc}{None}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{position} \PYG{o}{=} \PYG{n}{np}\PYG{o}{.}\PYG{n}{array}\PYG{p}{(}\PYG{n}{position}\PYG{p}{,} \PYG{n}{dtype}\PYG{o}{=}\PYG{n+nb}{float}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{features}\PYG{p}{:} \PYG{n}{List}\PYG{p}{[}\PYG{n}{RetinaFeature}\PYG{p}{]} \PYG{o}{=} \PYG{n}{features} \PYG{k}{if} \PYG{n}{features} \PYG{o+ow}{is} \PYG{o+ow}{not} \PYG{k+kc}{None} \PYG{k}{else} \PYG{p}{[]}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{add\PYGZus{}feature}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{feature}\PYG{p}{:} \PYG{n}{RetinaFeature}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{features}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{feature}\PYG{p}{)}
+
+
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{World}\PYG{p}{:}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{home} \PYG{o}{=} \PYG{p}{(}\PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{l+m+mf}{0.0}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{start} \PYG{o}{=} \PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{3.0}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{1.0}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{landmarks} \PYG{o}{=} \PYG{p}{[}
+            \PYG{p}{\PYGZob{}}\PYG{l+s+s2}{\PYGZdq{}pos\PYGZdq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+m+mf}{3.5}\PYG{p}{,} \PYG{l+m+mf}{2.0}\PYG{p}{),} \PYG{l+s+s2}{\PYGZdq{}radius\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mf}{0.5}\PYG{p}{\PYGZcb{},}
+            \PYG{p}{\PYGZob{}}\PYG{l+s+s2}{\PYGZdq{}pos\PYGZdq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+m+mf}{3.5}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{2.0}\PYG{p}{),} \PYG{l+s+s2}{\PYGZdq{}radius\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mf}{0.5}\PYG{p}{\PYGZcb{},}
+            \PYG{p}{\PYGZob{}}\PYG{l+s+s2}{\PYGZdq{}pos\PYGZdq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+m+mf}{0.0}\PYG{p}{,} \PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{4.0}\PYG{p}{),} \PYG{l+s+s2}{\PYGZdq{}radius\PYGZdq{}}\PYG{p}{:} \PYG{l+m+mf}{0.5}\PYG{p}{\PYGZcb{},}
+        \PYG{p}{]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{home\PYGZus{}retina}\PYG{p}{:} \PYG{n}{Optional}\PYG{p}{[}\PYG{n}{Retina}\PYG{p}{]} \PYG{o}{=} \PYG{k+kc}{None}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{retinas}\PYG{p}{:} \PYG{n}{List}\PYG{p}{[}\PYG{n}{Retina}\PYG{p}{]} \PYG{o}{=} \PYG{p}{[]}
+\end{MintedVerbatim}
