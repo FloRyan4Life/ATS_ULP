@@ -1,4 +1,6 @@
 __pycache__/
+output/
+verification/
 *.pyc
 .pytest_cache/
 .mypy_cache/
