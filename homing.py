@@ -8,6 +8,12 @@ import argparse
 import os
 import json
 
+
+#Constants for drawing (can be adjusted for better visibility)
+RADIUS_SNAPSHOT = 0.90
+RADIUS_CURRENT = 1.30
+RING_LINEWIDTH = 14
+
 # =============================================================================
 # Data Classes
 # =============================================================================
@@ -89,37 +95,59 @@ def project_landmark(robot_position: Tuple[float, float], landmark: dict) -> Ret
     
     return RetinaFeature(direction, 2.0 * half_arc, True)
 
-
 def build_retina(world: World, position: Tuple[float, float]) -> Retina:
     """Construct the full retina for a given robot position.
     
-    Projects all landmarks, sorts them by angle, and inserts gap features
-    between consecutive landmarks.
+    Projects all landmarks onto the retina, sorts them by angle, and inserts
+    gap features between consecutive landmarks. Overlapping landmarks are
+    handled robustly: no gap feature is created if two landmark arcs overlap
+    or touch, preventing artificially large gaps that wrap around the retina.
     """
     retina = Retina(position)
-    landmark_features = [project_landmark(position, lm) for lm in world.landmarks]
-    landmark_features.sort(key=lambda feature: feature.center_angle)
     
-    num_landmarks = len(landmark_features)
-    for index in range(num_landmarks):
-        current = landmark_features[index]
-        next_feature = landmark_features[(index + 1) % num_landmarks]
+    # Project landmarks and compute raw angular intervals [start, end]
+    # These are kept on the real line (can be negative) to avoid wrap-around
+    # artifacts during gap calculation.
+    intervals = []
+    for lm in world.landmarks:
+        feature = project_landmark(position, lm)
+        start = feature.center_angle - feature.arc_length / 2.0
+        end = feature.center_angle + feature.arc_length / 2.0
+        intervals.append((start, end, feature))
+    
+    # Sort by the landmark center angle
+    intervals.sort(key=lambda item: item[2].center_angle)
+    
+    OVERLAP_THRESHOLD = 1e-6
+    num = len(intervals)
+    
+    for i in range(num):
+        current_start, current_end, current_feature = intervals[i]
+        next_start, next_end, next_feature = intervals[(i + 1) % num]
         
-        # Right edge of current landmark arc
-        right_edge = (current.center_angle + current.arc_length / 2.0) % (2.0 * math.pi)
-        # Left edge of next landmark arc
-        left_edge = (next_feature.center_angle - next_feature.arc_length / 2.0) % (2.0 * math.pi)
+        # Add the current landmark to the retina
+        retina.add_feature(current_feature)
         
-        # Angular size of the gap between the two landmarks
-        gap_arc = (left_edge - right_edge) % (2.0 * math.pi)
-        gap_center = (right_edge + gap_arc / 2.0) % (2.0 * math.pi)
+        # For the wrap-around pair (last -> first), shift the next interval
+        # by +2π so it lies ahead of the current interval on the linear axis.
+        if i == num - 1:
+            next_start_linear = next_start + 2.0 * math.pi
+        else:
+            next_start_linear = next_start
         
-        gap = RetinaFeature(gap_center, max(0.0, gap_arc), False)
-        retina.add_feature(current)
+        # The gap is the open angular space between current_end and next_start.
+        # If next_start_linear is before current_end, the arcs overlap.
+        gap_arc = next_start_linear - current_end
+        
+        if gap_arc <= OVERLAP_THRESHOLD:
+            continue
+        
+        # Place the gap center on the retina circle [0, 2π)
+        gap_center = (current_end + gap_arc / 2.0) % (2.0 * math.pi)
+        gap = RetinaFeature(gap_center, gap_arc, False)
         retina.add_feature(gap)
     
     return retina
-
 
 # =============================================================================
 # Feature Matching & Vector Computation
@@ -290,7 +318,7 @@ def draw_retina_ring(ax, center, retina: Retina, radius: float, hollow=False):
             arc = Arc(center, 2 * radius, 2 * radius,
                       angle=0, theta1=center_deg - half_width_deg,
                       theta2=center_deg + half_width_deg,
-                      color=color, linewidth=10, zorder=10)
+                      color=color, linewidth=RING_LINEWIDTH, zorder=10)
             ax.add_patch(arc)
         else:
             wedge = Wedge(center, radius,
@@ -404,8 +432,8 @@ class HomingDiashow:
         self.step_size = step_size
         self.tolerance = tolerance
         
-        self.radius_snapshot = 0.50
-        self.radius_current = 1.00
+        self.radius_snapshot = RADIUS_SNAPSHOT
+        self.radius_current = RADIUS_CURRENT
         
         self.state = 0
         self.labels = [
@@ -479,13 +507,13 @@ class HomingDiashow:
                 center_y = current_position[1] + self.radius_current * math.sin(feature_angle)
                 
                 # Arrow start point slightly outside the ring
-                arrow_start_radius = self.radius_current + 0.5
+                arrow_start_radius = self.radius_current + 0.7
                 start_x = current_position[0] + arrow_start_radius * math.cos(feature_angle)
                 start_y = current_position[1] + arrow_start_radius * math.sin(feature_angle)
                 
                 # Dashed connector line for clear assignment
                 self.ax.plot([center_x, start_x], [center_y, start_y],
-                             color='black', linewidth=1.5, linestyle='--',
+                             color='black', linewidth=1.7, linestyle='--',
                              alpha=0.6, zorder=14)
                 
                 tangent = np.array([-math.sin(feature_angle), math.cos(feature_angle)])
